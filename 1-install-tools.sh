@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 TANZU_VERSION=1.4.0
-TANZU_CLI_DIRECTORY="$HOME/tanzu"
+TANZU_CLI_DIRECTORY="${TMPDIR:-/tmp}/tanzu"
 TANZU_CLI_PIVNET_PACKAGE="tanzu-cli-tap-${TANZU_VERSION}"
 TANZU_CLI_TAR_FILE="${TANZU_CLI_DIRECTORY}/tanzu-framework-darwin-amd64.tar"
 
@@ -38,8 +38,8 @@ if ! tanzu_cli_tar_present
 then
   >&2 echo "ERROR: You'll need to install the Tanzu CLI from the Tanzu Network.
 
-Visit https://network.tanzu.vmware.com and download the '$TANZU_CLI_PIVNET_PACKAGE' into \
-$TANZU_CLI_DIRECTORY"
+Visit https://network.tanzu.vmware.com and download the '$TANZU_CLI_PIVNET_PACKAGE'. Save it \
+as $TANZU_CLI_TAR_FILE"
   exit 1
 fi
 
