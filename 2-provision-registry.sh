@@ -5,6 +5,7 @@ CERT_PATH="$REGISTRY_FILES_PATH/certs/cert.pem"
 CERT_KEY_PATH="$REGISTRY_FILES_PATH/certs/key.pem"
 AUTH_FILE_PATH="$REGISTRY_FILES_PATH/auth"
 STORAGE_PATH="$REGISTRY_FILES_PATH/storage"
+NGINX_CONF_PATH="$(realpath "$(dirname "$0")")/conf/registry/nginx.conf"
 CERT_SANS="DNS:registry"
 
 create_and_store_self_signed_cert() {
@@ -24,22 +25,29 @@ create_and_store_self_signed_cert() {
 # we're going to deploy it as a container and join it to the Kind network.
 deploy_docker_registry() {
   >&2 echo "INFO: Starting the registry"
+  docker rm -f registry-backend >/dev/null &&
+  docker run  \
+    --detach \
+    --name registry-backend \
+    --network kind \
+    -v "$STORAGE_PATH:/var/lib/registry" \
+    registry:2 > /dev/null
+}
+
+# Needed to work around bug with imgpkg wherein it tries HTTP first for certain
+# hosts.
+deploy_docker_registry_frontend() {
+  >&2 echo "INFO: Starting the registry frontend"
   docker rm -f registry >/dev/null &&
   docker run  \
     --detach \
     --name registry \
     --network kind \
-    -p 443 \
+    -p 50000:50000 \
+    -v "$NGINX_CONF_PATH:/etc/nginx/nginx.conf" \
     -v "$(dirname "$CERT_PATH"):/certs" \
     -v "$AUTH_FILE_PATH:/auth/htpasswd" \
-    -v "$STORAGE_PATH:/var/lib/registry" \
-    -e REGISTRY_HTTP_ADDR="0.0.0.0:443" \
-    -e REGISTRY_AUTH=htpasswd \
-    -e REGISTRY_AUTH_HTPASSWD_REALM="Registry Realm" \
-    -e REGISTRY_AUTH_HTPASSWD_PATH=/auth/htpasswd \
-    -e REGISTRY_HTTP_TLS_CERTIFICATE=/certs/cert.pem \
-    -e REGISTRY_HTTP_TLS_KEY=/certs/key.pem \
-    registry:2 > /dev/null
+    nginx
 }
 
 create_registry_credentials() {
@@ -51,7 +59,7 @@ create_registry_credentials() {
 confirm_docker_registry() {
   docker run --network kind --rm --entrypoint sh \
     docker -c "echo '$(cat "$CERT_PATH")' >> /etc/ssl/certs/ca-certificates.crt && \
-docker login -u admin -p supersecret registry"
+docker login -u admin -p supersecret registry:50000"
 }
 
 create_certs_dir() {
@@ -62,4 +70,5 @@ create_certs_dir &&
   create_and_store_self_signed_cert &&
     create_registry_credentials &&
     deploy_docker_registry &&
+    deploy_docker_registry_frontend &&
     confirm_docker_registry

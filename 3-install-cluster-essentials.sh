@@ -1,9 +1,15 @@
 #!/usr/bin/env bash
+INSTALL_CARVEL_TOOLS_ONLY="${INSTALL_CARVEL_TOOLS_ONLY:-false}"
 
 usage() {
   cat <<-EOF
 Installs the Cluster Essentials bundle onto Kind clusters.
 Usage: $(basename "$0") [TANZU-NET-USERNAME] [TANZU-NET-PASSWORD]
+
+NOTES
+
+- Supply INSTALL_CARVEL_TOOLS_ONLY to just install the Carvel tools (useful for
+  troubleshooting.)
 EOF
   echo "$1"
   exit "${2:-0}"
@@ -37,6 +43,8 @@ cluster_essentials_downloaded() {
 #     xargs -I {} pivnet download-product-files -p tanzu-prerequisites \
 #       -r 1.4.0 -i {} -d "$TMPDIR/tanzu"
 kubernetes_clusters_started() {
+  grep -Eiq '^true$' <<< "$INSTALL_CARVEL_TOOLS_ONLY" && return 0
+
   clusters=$(kind get clusters)
   for cluster in "$(dirname "$0")"/conf/clusters/*.yaml
   do
@@ -64,6 +72,7 @@ install_onto_every_cluster() {
     ./install.sh --yes
   }
 
+  grep -Eiq '^true$' <<< "$INSTALL_CARVEL_TOOLS_ONLY" && return 0
   for cluster in "$(dirname "$0")"/conf/clusters/*.yaml
   do
     name=tap-$(awk -F '/' '{print $NF}' <<< "$cluster" | cut -f1 -d '.')-cluster
