@@ -15,6 +15,13 @@ extract_tanzu_cli_tar() {
     touch "$TANZU_CLI_DIRECTORY/cli-extracted"
 }
 
+# TODO: Automate this with pivnet.
+# --------------------------------
+# - pivnet login --api-token=$TOKEN
+# - pivnet product-files -p tanzu-prerequisites -r 1.4.0 --format=json | \
+#     jq '.[] | select(.name | contains("darwin")) | .id' | \
+#     xargs -I {} pivnet download-product-files -p tanzu-prerequisites \
+#       -r 1.4.0 -i {} -d "$TMPDIR/tanzu"
 install_tanzu_cli() {
   trap 'popd &>/dev/null' INT HUP EXIT RETURN
   &>/dev/null pushd "$TANZU_CLI_DIRECTORY" || return 1
