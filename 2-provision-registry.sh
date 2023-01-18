@@ -30,6 +30,7 @@ deploy_docker_registry() {
     --detach \
     --name registry-backend \
     --network kind \
+    -e REGISTRY_VALIDATION_DISABLED=true \
     -v "$STORAGE_PATH:/var/lib/registry" \
     registry:2 > /dev/null
 }
