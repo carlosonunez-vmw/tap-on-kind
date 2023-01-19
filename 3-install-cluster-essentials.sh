@@ -62,7 +62,7 @@ install_onto_every_cluster() {
     kubectl get secret kapp-controller-config ||
       kubectl create secret generic kapp-controller-config \
         --namespace kapp-controller \
-        --from-file "$CERT_PATH"
+        --from-literal caCerts="$(cat "$CERT_PATH" | sed 's/$/\\n/' | tr -d '\n')"
   }
 
   _install_cluster_essentials() {
