@@ -33,7 +33,8 @@ render_profile_template() {
   test -d "$RENDERED_TEMPLATE_PATH" || mkdir -p "$RENDERED_TEMPLATE_PATH"
   for cluster in $(kubernetes_clusters)
   do
-    sed "s/%REGISTRY_CERT_HERE%/$(cat "$CERT_PATH")/" "$TEMPLATE_PATH" |
+    cert=$(awk '{printf "%s\\n    ", $0}' "$CERT_PATH/cert.pem")
+    sed "s;%REGISTRY_CERT_HERE%;$cert;" "$TEMPLATE_PATH" |
       sed "s/%PROFILE_NAME%/$cluster/g" > "${RENDERED_TEMPLATE_PATH}/$cluster.yaml"
   done
 }
@@ -76,4 +77,5 @@ Please run 0-create-kind-cluster before running this script."
 fi
 
 create_tap_install_namespace &&
-  render_profile_template && install_tap
+  render_profile_template &&
+  install_tap
