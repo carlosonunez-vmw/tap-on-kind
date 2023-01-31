@@ -22,6 +22,8 @@ login_to_tap_registry() {
     -p "$INSTALL_REGISTRY_PASSWORD"
 }
 
+# This needs to be set to 'localhost' instead of 'registry' since imgpkg
+# runs on your computer instead of within a Kubernetes pod.
 slurp_images() {
   "$IMGPKG_APP_PATH" copy \
     -b "registry.tanzu.vmware.com/tanzu-application-platform/tap-packages:1.4.0" \
