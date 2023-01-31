@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-CERT_PATH="${TMPDIR:-/tmp}/tanzu/registry/certs"
+CERT_PATH="$(dirname "$(realpath "$0")")/.data/tanzu/registry/certs"
 
 kubernetes_clusters_started() {
   clusters=$(kind get clusters)
-  for cluster in "$(dirname "$0")"/conf/clusters/*.yaml
+  for cluster in "$(dirname "$(realpath "$0")")"/conf/clusters/*.yaml
   do
     name=tap-$(awk -F '/' '{print $NF}' <<< "$cluster" | cut -f1 -d '.')-cluster
     grep -q "$name" <<< "$clusters" || return 1
@@ -11,7 +11,7 @@ kubernetes_clusters_started() {
 }
 
 kubernetes_clusters() {
-  find "$(dirname "$0")"/conf/clusters/*.yaml -exec basename {} \; | sed 's/.yaml$//'
+  find "$(dirname "$(realpath "$0")")"/conf/clusters/*.yaml -exec basename {} \; | sed 's/.yaml$//'
 }
 
 kubectl_cmd() {

@@ -14,9 +14,9 @@ EOF
   echo "$1"
   exit "${2:-0}"
 }
-CLUSTER_ESSENTIALS_FILE="${TMPDIR:-/tmp}/tanzu/cluster-essentials.tar"
-CLUSTER_ESSENTIALS_PATH="${TMPDIR:-/tmp}/tanzu/cluster-essentials"
-REGISTRY_FILES_PATH="${TMPDIR:-/tmp}/tanzu/registry"
+CLUSTER_ESSENTIALS_FILE="$(dirname "$(realpath "$0")")/.data/tanzu/cluster-essentials.tar"
+CLUSTER_ESSENTIALS_PATH="$(dirname "$(realpath "$0")")/.data/tanzu/cluster-essentials"
+REGISTRY_FILES_PATH="$(dirname "$(realpath "$0")")/.data/tanzu/registry"
 CERT_PATH="$REGISTRY_FILES_PATH/certs/cert.pem"
 # TODO: You can also get this from PivNet.
 # pivnet login --api-token=$TOKEN &&
@@ -46,7 +46,7 @@ kubernetes_clusters_started() {
   grep -Eiq '^true$' <<< "$INSTALL_CARVEL_TOOLS_ONLY" && return 0
 
   clusters=$(kind get clusters)
-  for cluster in "$(dirname "$0")"/conf/clusters/*.yaml
+  for cluster in "$(dirname "$(realpath "$0")")"/conf/clusters/*.yaml
   do
     name=tap-$(awk -F '/' '{print $NF}' <<< "$cluster" | cut -f1 -d '.')-cluster
     grep -q "$name" <<< "$clusters" || return 1
@@ -73,7 +73,7 @@ install_onto_every_cluster() {
   }
 
   grep -Eiq '^true$' <<< "$INSTALL_CARVEL_TOOLS_ONLY" && return 0
-  for cluster in "$(dirname "$0")"/conf/clusters/*.yaml
+  for cluster in "$(dirname "$(realpath "$0")")"/conf/clusters/*.yaml
   do
     name=tap-$(awk -F '/' '{print $NF}' <<< "$cluster" | cut -f1 -d '.')-cluster
     ctx="kind-${name}"

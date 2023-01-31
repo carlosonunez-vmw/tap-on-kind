@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 TANZU_VERSION=1.4.0
-TANZU_CLI_DIRECTORY="${TMPDIR:-/tmp}/tanzu"
+TANZU_CLI_DIRECTORY="$(dirname "$(realpath "$0")")/.data/tanzu"
 TANZU_CLI_PIVNET_PACKAGE="tanzu-cli-tap-${TANZU_VERSION}"
 TANZU_CLI_TAR_FILE="${TANZU_CLI_DIRECTORY}/tanzu-framework-darwin-amd64.tar"
 

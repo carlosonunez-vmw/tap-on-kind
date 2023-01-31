@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 OPENSSL_BIN="/usr/local/opt/openssl@3/bin/openssl"
-REGISTRY_FILES_PATH="${TMPDIR:-/tmp}/tanzu/registry"
+REGISTRY_FILES_PATH="$(dirname "$(realpath "$0")")/.data/tanzu/registry"
 CERT_PATH="$REGISTRY_FILES_PATH/certs/cert.pem"
 CERT_KEY_PATH="$REGISTRY_FILES_PATH/certs/key.pem"
 AUTH_FILE_PATH="$REGISTRY_FILES_PATH/auth"
 STORAGE_PATH="$REGISTRY_FILES_PATH/storage"
-NGINX_CONF_PATH="$(realpath "$(dirname "$0")")/conf/registry/nginx.conf"
+NGINX_CONF_PATH="$(realpath "$(dirname "$(realpath "$0")")")/conf/registry/nginx.conf"
 CERT_SANS="DNS:registry"
 
 create_and_store_self_signed_cert() {
