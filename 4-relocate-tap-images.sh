@@ -32,6 +32,17 @@ slurp_images() {
       --registry-verify-certs=false
 }
 
+confirm_registry_running() {
+  if ! nc -z localhost 50000
+  then
+    >&2 echo "ERROR: The local Docker registry is probably not running. Run \
+./2-provision-registry.sh to start it up!"
+    return 1
+  fi
+}
+
+confirm_registry_running || exit 1
+
 login_to_local_regsitry &&
   login_to_tap_registry &&
   slurp_images

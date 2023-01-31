@@ -68,6 +68,17 @@ update_kapp_controller_config() {
     done
 }
 
+confirm_registry_running() {
+  if ! nc -z localhost 50000
+  then
+    >&2 echo "ERROR: The local Docker registry is probably not running. Run \
+./2-provision-registry.sh to start it up!"
+    return 1
+  fi
+}
+
+confirm_registry_running || exit 1
+
 
 if ! kubernetes_clusters_started
 then >&2 echo "ERROR: None or some Kubernetes clusters missing. \
