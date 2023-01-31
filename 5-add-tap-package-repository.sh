@@ -56,15 +56,18 @@ add_package_repository() {
 }
 
 update_kapp_controller_config() {
-  updated_ca_certs=$(printf '{"data":{"caCerts":"%s","dangerousSkipTLSVerify": "registry"}}' \
-    "$(sed 's/$/\\n/' "$CERT_PATH/cert.pem" | tr -d '\n' | base64 -w 0)")
+  updated_ca_certs=$(printf '{"data":{"caCerts":"%s","dangerousSkipTLSVerify": "%s"}}' \
+    "$(sed 's/$/\\n/' "$CERT_PATH/cert.pem" | tr -d '\n' | base64 -w 0)" \
+    "$(base64 -w 0 <<< 'registry:50000')")
   for cluster in $(kubernetes_clusters)
   do
     >&2 echo "===> INFO: Adding registry cert to kapp-controller config on cluster $cluster"
     kubectl_cmd "$cluster" -n kapp-controller patch secret kapp-controller-config \
       --type=merge \
       --patch "$updated_ca_certs" &&
-      kubectl_cmd "$cluster" delete pod -n kapp-controller -l app=kapp-controller
+      kubectl_cmd "$cluster" delete pod -n kapp-controller -l app=kapp-controller &&
+      kubectl_cmd "$cluster" wait --for=condition=Available=true -n kapp-controller \
+        deployment kapp-controller --timeout 90s
     done
 }
 
