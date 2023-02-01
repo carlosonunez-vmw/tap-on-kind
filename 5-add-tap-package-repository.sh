@@ -1,17 +1,14 @@
 #!/usr/bin/env bash
+CLUSTER_NAMES=(build run iterate view)
 CERT_PATH="$(dirname "$(realpath "$0")")/.data/tanzu/registry/certs"
 
 kubernetes_clusters_started() {
   clusters=$(kind get clusters)
-  for cluster in "$(dirname "$(realpath "$0")")"/conf/clusters/*.yaml
+  for cluster in "${CLUSTER_NAMES[@]}"
   do
     name=tap-$(awk -F '/' '{print $NF}' <<< "$cluster" | cut -f1 -d '.')-cluster
     grep -q "$name" <<< "$clusters" || return 1
   done
-}
-
-kubernetes_clusters() {
-  find "$(dirname "$(realpath "$0")")"/conf/clusters/*.yaml -exec basename {} \; | sed 's/.yaml$//'
 }
 
 kubectl_cmd() {
@@ -28,7 +25,7 @@ tanzu_cmd() {
 }
 
 create_namespace_on_all_clusters() {
-  for cluster in $(kubernetes_clusters)
+  for cluster in "${CLUSTER_NAMES[@]}"
   do
     kubectl_cmd "$cluster" get ns tap-install >/dev/null ||
       kubectl_cmd "$cluster" create ns tap-install
@@ -36,7 +33,7 @@ create_namespace_on_all_clusters() {
 }
 
 create_registry_secret() {
-  for cluster in $(kubernetes_clusters)
+  for cluster in "${CLUSTER_NAMES[@]}"
   do
     tanzu_cmd "$cluster" secret registry add tap-registry \
       --username admin \
@@ -47,7 +44,7 @@ create_registry_secret() {
 }
 
 add_package_repository() {
-  for cluster in $(kubernetes_clusters)
+  for cluster in "${CLUSTER_NAMES[@]}"
   do
     tanzu_cmd "$cluster" package repository add tanzu-tap-repository \
       --url registry:50000/tap-1.4.0/tap-packages:1.4.0 \
@@ -59,7 +56,7 @@ update_kapp_controller_config() {
   updated_ca_certs=$(printf '{"data":{"caCerts":"%s","dangerousSkipTLSVerify": "%s"}}' \
     "$(sed 's/$/\\n/' "$CERT_PATH/cert.pem" | tr -d '\n' | base64 -w 0)" \
     "$(base64 -w 0 <<< 'registry:50000')")
-  for cluster in $(kubernetes_clusters)
+  for cluster in "${CLUSTER_NAMES[@]}"
   do
     >&2 echo "===> INFO: Adding registry cert to kapp-controller config on cluster $cluster"
     kubectl_cmd "$cluster" -n kapp-controller patch secret kapp-controller-config \

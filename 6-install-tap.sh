@@ -2,10 +2,11 @@
 CERT_PATH="$(dirname "$(realpath "$0")")/.data/tanzu/registry/certs"
 TEMPLATE_PATH="$(dirname "$(realpath "$0")")/conf/profile.tmpl"
 RENDERED_TEMPLATE_PATH="$(dirname "$(realpath "$0")")/.data/tanzu/profiles"
+CLUSTER_NAMES=(build run iterate view)
 
 kubernetes_clusters_started() {
   clusters=$(kind get clusters)
-  for cluster in "$(dirname "$(realpath "$0")")"/conf/clusters/*.yaml
+  for cluster in "${CLUSTER_NAMES[@]}"
   do
     name=tap-$(awk -F '/' '{print $NF}' <<< "$cluster" | cut -f1 -d '.')-cluster
     grep -q "$name" <<< "$clusters" || return 1
@@ -31,7 +32,7 @@ tanzu_cmd() {
 
 render_profile_template() {
   test -d "$RENDERED_TEMPLATE_PATH" || mkdir -p "$RENDERED_TEMPLATE_PATH"
-  for cluster in $(kubernetes_clusters)
+  for cluster in "${CLUSTER_NAMES[@]}"
   do
     cert=$(awk '{printf "%s\\n    ", $0}' "$CERT_PATH/cert.pem")
     sed "s;%REGISTRY_CERT_HERE%;$cert;" "$TEMPLATE_PATH" |
@@ -40,7 +41,7 @@ render_profile_template() {
 }
 
 install_tap() {
-  for cluster in $(kubernetes_clusters)
+  for cluster in "${CLUSTER_NAMES[@]}"
   do
     tanzu_cmd "$cluster" package install tap \
       -p tap.tanzu.vmware.com \
@@ -51,7 +52,7 @@ install_tap() {
 }
 
 create_tap_install_namespace() {
-  for cluster in $(kubernetes_clusters)
+  for cluster in "${CLUSTER_NAMES[@]}"
   do
     kubectl_cmd "$cluster" get ns tap-install ||
       kubectl_cmd "$cluster" create ns tap-install

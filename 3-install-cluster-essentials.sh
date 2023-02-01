@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 INSTALL_CARVEL_TOOLS_ONLY="${INSTALL_CARVEL_TOOLS_ONLY:-false}"
+CLUSTER_NAMES=(build run iterate view)
 
 usage() {
   cat <<-EOF
@@ -46,7 +47,7 @@ kubernetes_clusters_started() {
   grep -Eiq '^true$' <<< "$INSTALL_CARVEL_TOOLS_ONLY" && return 0
 
   clusters=$(kind get clusters)
-  for cluster in "$(dirname "$(realpath "$0")")"/conf/clusters/*.yaml
+  for cluster in "${CLUSTER_NAMES[@]}"
   do
     name=tap-$(awk -F '/' '{print $NF}' <<< "$cluster" | cut -f1 -d '.')-cluster
     grep -q "$name" <<< "$clusters" || return 1
@@ -73,7 +74,7 @@ install_onto_every_cluster() {
   }
 
   grep -Eiq '^true$' <<< "$INSTALL_CARVEL_TOOLS_ONLY" && return 0
-  for cluster in "$(dirname "$(realpath "$0")")"/conf/clusters/*.yaml
+  for cluster in "${CLUSTER_NAMES[@]}"
   do
     name=tap-$(awk -F '/' '{print $NF}' <<< "$cluster" | cut -f1 -d '.')-cluster
     ctx="kind-${name}"
