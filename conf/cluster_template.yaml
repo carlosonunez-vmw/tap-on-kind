@@ -23,6 +23,8 @@ nodes:
   - containerPort: 80
     hostPort: %HTTP_PORT%
     protocol: TCP
+    listenAddress: "0.0.0.0"
   - containerPort: 443
     hostPort: %HTTPS_PORT%
     protocol: TCP
+    listenAddress: "0.0.0.0"
