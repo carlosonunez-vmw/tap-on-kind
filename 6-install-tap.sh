@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
+source "$(dirname "$0")/include/profiles.sh"
 CERT_PATH="$(dirname "$(realpath "$0")")/.data/tanzu/registry/certs"
 TEMPLATE_PATH="$(dirname "$(realpath "$0")")/conf/profile.tmpl"
 RENDERED_TEMPLATE_PATH="$(dirname "$(realpath "$0")")/.data/tanzu/profiles"
-CLUSTER_NAMES=(build run iterate view)
+CLUSTER_NAMES=$(profiles_to_install)
 
 kubernetes_clusters_started() {
   clusters=$(kind get clusters)

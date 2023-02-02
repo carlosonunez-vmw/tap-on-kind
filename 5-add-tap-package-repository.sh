@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-CLUSTER_NAMES=(build run iterate view)
+source "$(dirname "$0")/include/profiles.sh"
+CLUSTER_NAMES=$(profiles_to_install)
 CERT_PATH="$(dirname "$(realpath "$0")")/.data/tanzu/registry/certs"
 
 kubernetes_clusters_started() {
@@ -62,7 +63,7 @@ update_kapp_controller_config() {
     kubectl_cmd "$cluster" -n kapp-controller patch secret kapp-controller-config \
       --type=merge \
       --patch "$updated_ca_certs" &&
-      kubectl_cmd "$cluster" delete pod -n kapp-controller -l app=kapp-controller &&
+      kubectl_cmd "$cluster" rollout restart deployment kapp-controller -n kapp-controller &&
       kubectl_cmd "$cluster" wait --for=condition=Available=true -n kapp-controller \
         deployment kapp-controller --timeout 90s
     done

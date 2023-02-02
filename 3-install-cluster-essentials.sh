@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
+source "$(dirname "$0")/include/profiles.sh"
 INSTALL_CARVEL_TOOLS_ONLY="${INSTALL_CARVEL_TOOLS_ONLY:-false}"
-CLUSTER_NAMES=(build run iterate view)
+CLUSTER_NAMES=$(profiles_to_install)
 
 usage() {
   cat <<-EOF
@@ -60,7 +61,7 @@ install_onto_every_cluster() {
   }
 
   _create_kapp_controller_registry_secret() {
-    kubectl get secret kapp-controller-config ||
+    kubectl get secret kapp-controller-config --namespace kapp-controller ||
       kubectl create secret generic kapp-controller-config \
         --namespace kapp-controller \
         --from-literal caCerts="$(cat "$CERT_PATH" | sed 's/$/\\n/' | tr -d '\n')"
