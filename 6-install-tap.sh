@@ -4,6 +4,7 @@ CERT_PATH="$(dirname "$(realpath "$0")")/.data/tanzu/registry/certs"
 TEMPLATE_PATH="$(dirname "$(realpath "$0")")/conf/profile.tmpl"
 RENDERED_TEMPLATE_PATH="$(dirname "$(realpath "$0")")/.data/tanzu/profiles"
 CLUSTER_NAMES=$(profiles_to_install)
+TAP_GUI_CONF_FILE="$(dirname "$(realpath "$0")")/conf/tap-gui.yaml"
 
 kubernetes_clusters_started() {
   clusters=$(kind get clusters)
@@ -69,6 +70,26 @@ confirm_registry_running() {
   fi
 }
 
+_view_cluster_in_clusters() {
+  grep 'view' <<< "${CLUSTER_NAMES[@]}"
+}
+
+install_tap_gui_if_iterate_only() {
+  _view_cluster_in_clusters && return 0
+  tap_gui_version="$(tanzu_cmd iterate package available list tap-gui.tanzu.vmware.com \
+    --namespace tap-install -o json | jq '.[0].version')"
+  if test -z "$tap_gui_version" || test "${tap_gui_version,,}" == null
+  then
+    >&2 echo "ERROR: Could not retrieve TAP GUI version."
+    return 1
+  fi
+  tanzu_cmd 'iterate' package install tap-gui \
+    --package-name tap-gui.tanzu.vmware.com \
+    --version  "$tap_gui_version" \
+    --namespace tap-install \
+    -f "$TAP_GUI_CONF_FILE"
+}
+
 confirm_registry_running || exit 1
 
 
@@ -80,4 +101,5 @@ fi
 
 create_tap_install_namespace &&
   render_profile_template &&
-  install_tap
+  install_tap &&
+  install_tap_gui
